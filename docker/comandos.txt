@@ -1,0 +1,28 @@
+#Se ejecuta contenedor de MySQL
+#Se crea primero un volumen para persistir los datos
+sudo docker volume create mysql-db-data
+sudo docker run -d -p 33060:3306 --name BD -e MYSQL_ROOT_PASSWORD=root --mount src=mysql-db-data,dst=/var/lib/mysql mysql
+
+#Se crea imagen de Apache-PHP 7.2
+sudo docker build -t desarrollo .
+
+#Se ejecuta contenedor de Apache - PHP 7.2
+sudo docker run -d --name develop --link BD:mysql -p 82:80 desarrollo
+
+#Se copian archivos de interfaz al contenedor de aplicación 
+sudo docker cp index.html develop:/usr/local/apache2/htdocs/
+sudo docker cp BD.php develop:/var/www/html/
+
+#Dentro del contenedor de aplicación se instala mysql para conexión a MySQL
+sudo docker exec -it develop bash
+docker-php-ext-install mysqli
+
+#Dentro del contenedor de base de datos se crea base de datos y tablas con datos a mostrar
+sudo docker exec -it BD bash
+create database integracion;
+create table integracion.estudiantes (nombre VARCHAR(30) NOT NULL);
+insert into integracion.estudiantes values("Alejandra Acosta Hernandez");
+insert into integracion.estudiantes values("Diana Maria Neira Uribe");
+insert into integracion.estudiantes values("Paola Andrea Melo Barreto");
+insert into integracion.estudiantes values("Edisson Sanabria Villaizan");
+insert into integracion.estudiantes values("Cristian Andres Restrepo");
